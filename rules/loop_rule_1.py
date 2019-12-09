@@ -53,7 +53,11 @@ def check_for_pure_function_call(file_content, loop_location, statement, functio
         check_for_pure_function_call(file_content, loop_location, statement.right, functions)
     elif statement.type == 'FunctionCall':
         function_name = statement.expression.name
-        function = functions[function_name]
+        try:
+            function = functions[function_name]
+        except KeyError:
+            return False
+            # TODO: functions defined in different contract
         if function.stateMutability == 'pure' and function.arguments == {}:
             global additional_lines
             loop_line = loop_location['start']['line'] - 1 + additional_lines

@@ -3,7 +3,6 @@ import os
 import ntpath
 import csv
 import requests
-import pprint
 
 from solidity_parser import parser
 
@@ -26,40 +25,49 @@ def main():
         for r, d, f in os.walk("contracts"):
             for file in f:
                 files.append(os.path.join(r, file))
+
+        for_count = 1
+
         for f in files:
             print(f)
             # read input
-            file = open(f, "r")
+            file = open(f, "r", encoding='utf8')
             text = file.read()
             # TODO: replace all \t characters with spaces
-            source_unit = parser.parse(text=text, loc=True)
+            try:
+                source_unit = parser.parse(text=text, loc=True)
+            except TypeError:
+                continue
             source_unit_object = parser.objectify(source_unit)
             contracts = source_unit_object.contracts.keys()
 
             # create output file
-            input_file = open(f, "r")
-            output_file = open('output\\opt_' + ntpath.basename(f), 'w')
+            input_file = open(f, "r", encoding='utf8')
+            output_file = open('output\\opt_' + ntpath.basename(f), 'w', encoding='utf8')
             content = input_file.readlines()
+
 
             # process rules
             for contract in contracts:
-                check_time_for_space_rule_1(content, contract)
+                # check_time_for_space_rule_1(content, contract)
                 functions = source_unit_object.contracts[contract].functions
                 function_keys = source_unit_object.contracts[contract].functions.keys()
                 for function in function_keys:
                     function = functions[function]
-                    check_logic_rule_1(content, function)
-                    check_procedure_rule_1(content, function)
+                    # check_logic_rule_1(content, function)
+                    # check_procedure_rule_1(content, function)
                     function_body = function._node.body
                     if function_body:
                         statements = function_body.statements
                         for statement in statements:
-                            if statement.type == 'ForStatement':
+                            if statement and statement.type == 'ForStatement':
+                                print('########### ' + str(for_count) + ' ForStatements found')
+                                for_count += 1
                                 check_loop_rule_1(content, statement, functions)
-                                check_loop_rule_2(content, statement)
-                                check_loop_rule_3(content, statement)
-                                check_loop_rule_4(content, statement)
-                                check_loop_rule_5(content, statement)
+                                # check_loop_rule_2(content, statement)
+                                # check_loop_rule_3(content, statement)
+                                # check_loop_rule_4(content, statement)
+                                # check_loop_rule_5(content, statement)
             # write output
             output_file.writelines(content)
             output_file.close()
