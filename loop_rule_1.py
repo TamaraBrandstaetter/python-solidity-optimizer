@@ -1,3 +1,10 @@
+#################################################
+#   loop rule 1: Code motion of loops           #
+#   -----------------------------------------   #
+#   Repeated calculations are moved outside a   #
+#   loop and therefore only calculated once.    #
+#################################################
+
 import pprint
 import uuid
 
@@ -16,7 +23,7 @@ def check_loop_rule_1(file_content, loop_statement, functions):
 
 def move_statement_up(file_content, loop_statement, loop_location, variable_name, functions):
     loop_line = loop_location['start']['line'] - 1
-    tabs_to_insert = '\t' * loop_location['start']['column']
+    tabs_to_insert = ' ' * loop_location['start']['column']
 
     if not statement_contains_identifier(loop_statement, variable_name):
         pprint.pprint("############ found instance of rule #2 in assignment #############")
@@ -50,7 +57,6 @@ def check_for_pure_function_call(file_content, loop_location, statement, functio
         if function.stateMutability == 'pure' and function.arguments == {}:
             global additional_lines
             loop_line = loop_location['start']['line'] - 1 + additional_lines
-            # TODO: TABS OR SPACES, PLS GENERALIZE
             tabs_to_insert = ' ' * loop_location['start']['column']
             pprint.pprint("Found pure function call")
             statement_line = statement.loc['start']['line'] - 1 + additional_lines
