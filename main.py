@@ -1,16 +1,15 @@
 import sys
-import pprint
 
 from solidity_parser import parser
 
-from logic_rule_1 import check_logic_rule_1
-from loop_rule_1 import check_loop_rule_1
-from loop_rule_2 import check_loop_rule_2
-from loop_rule_3 import check_loop_rule_3
-from loop_rule_4 import check_loop_rule_4
-from loop_rule_5 import check_loop_rule_5
-from procedure_rule_1 import check_procedure_rule_1
-from time_for_space_rule_1 import check_time_for_space_rule_1
+from rules.logic_rule_1 import check_logic_rule_1
+from rules.loop_rule_1 import check_loop_rule_1
+from rules.loop_rule_2 import check_loop_rule_2
+from rules.loop_rule_3 import check_loop_rule_3
+from rules.loop_rule_4 import check_loop_rule_4
+from rules.loop_rule_5 import check_loop_rule_5
+from rules.procedure_rule_1 import check_procedure_rule_1
+from rules.time_for_space_rule_1 import check_time_for_space_rule_1
 
 
 def main():

@@ -2,7 +2,7 @@ pragma solidity ^0.5.12;
 
 contract Loop1 {
 	function doSomething1() public returns(uint256) {
-		uint256 a = 123;
+  uint256 a = 123;
 		for(uint256 i = 0; i < 100; i++) {
 		}
 		return 12;
@@ -10,17 +10,17 @@ contract Loop1 {
 	
     function doSomething() public {
         uint256[] memory array = new uint256[](10);
-        uint256 var_01cb4ad3d554419190ea6e5642e55b9a = someExpensiveOperation();
+        uint256 var_437a108df1924d61967b7fee98bf5810 = someExpensiveOperation();
         for (uint256 i = 0; i < 12; i++) {
-            array[i] = i + var_01cb4ad3d554419190ea6e5642e55b9a + 12;
+            array[i] = i + var_437a108df1924d61967b7fee98bf5810 + 12;
         }
     }
 	
 	function doSomethingAgain() public {
         uint256[] memory array = new uint256[](10);
-        uint256 var_8b0b604103ea42e9b1fde32ad6a19897 = someExpensiveOperation();
+        uint256 var_f7d69b45af394cc2b50b231049e825de = someExpensiveOperation();
         for (uint256 i = 0; i < 22; i++) {
-            array[i] = var_8b0b604103ea42e9b1fde32ad6a19897;
+            array[i] = var_f7d69b45af394cc2b50b231049e825de;
         }
     }
     
