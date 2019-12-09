@@ -1,4 +1,9 @@
 import sys
+import os
+import ntpath
+import csv
+import requests
+import pprint
 
 from solidity_parser import parser
 
@@ -13,39 +18,80 @@ from rules.time_for_space_rule_1 import check_time_for_space_rule_1
 
 
 def main():
-    # read input
-    file = open(sys.argv[1], "r")
-    text = file.read()
-    # TODO: replace all \t characters with spaces
-    source_unit = parser.parse(text=text, loc=True)
-    source_unit_object = parser.objectify(source_unit)
-    contracts = source_unit_object.contracts.keys()
+    if len(sys.argv) > 1 and sys.argv[1] == '-initialize':
+        initialize()
+        return 0
+    else:
+        files = []
+        for r, d, f in os.walk("contracts"):
+            for file in f:
+                files.append(os.path.join(r, file))
+        for f in files:
+            print(f)
+            # read input
+            file = open(f, "r")
+            text = file.read()
+            # TODO: replace all \t characters with spaces
+            source_unit = parser.parse(text=text, loc=True)
+            source_unit_object = parser.objectify(source_unit)
+            contracts = source_unit_object.contracts.keys()
 
-    # create output file
-    input_file = open(sys.argv[1], "r")
-    output_file = open('output.sol', 'w')
-    content = input_file.readlines()
+            # create output file
+            input_file = open(f, "r")
+            output_file = open('output\\opt_' + ntpath.basename(f), 'w')
+            content = input_file.readlines()
 
-    # process rules
-    for contract in contracts:
-        check_time_for_space_rule_1(content, contract)
-        functions = source_unit_object.contracts[contract].functions
-        function_keys = source_unit_object.contracts[contract].functions.keys()
-        for function in function_keys:
-            function = functions[function]
-            check_logic_rule_1(content, function)
-            check_procedure_rule_1(content, function)
-            statements = function._node.body.statements
-            for statement in statements:
-                if statement.type == 'ForStatement':
-                    check_loop_rule_1(content, statement, functions)
-                    check_loop_rule_2(content, statement)
-                    check_loop_rule_3(content, statement)
-                    check_loop_rule_4(content, statement)
-                    check_loop_rule_5(content, statement)
-    # write output
-    output_file.writelines(content)
-    output_file.close()
+            # process rules
+            for contract in contracts:
+                check_time_for_space_rule_1(content, contract)
+                functions = source_unit_object.contracts[contract].functions
+                function_keys = source_unit_object.contracts[contract].functions.keys()
+                for function in function_keys:
+                    function = functions[function]
+                    check_logic_rule_1(content, function)
+                    check_procedure_rule_1(content, function)
+                    function_body = function._node.body
+                    if function_body:
+                        statements = function_body.statements
+                        for statement in statements:
+                            if statement.type == 'ForStatement':
+                                check_loop_rule_1(content, statement, functions)
+                                check_loop_rule_2(content, statement)
+                                check_loop_rule_3(content, statement)
+                                check_loop_rule_4(content, statement)
+                                check_loop_rule_5(content, statement)
+            # write output
+            output_file.writelines(content)
+            output_file.close()
+
+
+def initialize():
+    with open('export-verified-contractaddress-opensource-license.csv') as csv_file:
+        read_csv = csv.reader(csv_file, delimiter=',')
+        addresses = []
+        names = []
+        skip = 2
+        for row in read_csv:
+            if skip > 0:
+                skip -= 1
+            else:
+                addresses.append(row[1])
+                names.append(row[2])
+
+    # get contracts from api
+    url = "https://api.etherscan.io/api"
+    api_key = "EMSUR6UBYCTVHFA787RJGBATX7HUHXARZI"
+    index = 0
+    for address in addresses:
+        print(str(index+1) + "/" + str(len(addresses)) + ": " + names[index] + "; address: " + address)
+        params = {'module': 'contract', 'action': 'getsourcecode', 'address': address, 'apikey': api_key}
+        request = requests.get(url=url, params=params)
+        data = request.json()
+        output_file = open('contracts\\' + names[index] + '.sol', 'w', encoding='utf8')
+        file_content = data['result'][0]['SourceCode'].replace("\r\n", "\n")
+        output_file.write(file_content)
+        output_file.close()
+        index += 1
 
 
 if __name__ == "__main__":
