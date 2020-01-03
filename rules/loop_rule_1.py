@@ -9,6 +9,7 @@ import pprint
 import uuid
 
 additional_lines = 0
+instance_counter = 0
 
 
 def check_loop_rule_1(file_content, loop_statement, functions):
@@ -16,17 +17,31 @@ def check_loop_rule_1(file_content, loop_statement, functions):
     loop_body = loop_statement.body
     loop_location = loop_statement.loc
 
+    if loop_expressions is None:
+        # no loop expression. example: "for (; len >= 32; len -= 32)"
+        return False
+    try:
+        loop_expressions.variables
+    except KeyError:
+        # loop variable is not defined inside the loop. example: "for (i = 0; i < length; i++)"
+        return False
     for variable in loop_expressions.variables:
-        for loop_statement in loop_body.statements:
-            move_statement_up(file_content, loop_statement, loop_location, variable.name, functions)
+        if loop_body.type == 'Block':
+            for loop_statement in loop_body.statements:
+                move_statement_up(file_content, loop_statement, loop_location, variable.name, functions)
+        elif loop_body.type == 'ExpressionStatement':
+            # loop inline. example: "for (uint i = 0; i < _ba.length; i++) babc[k++] = _ba[i];"
+            return False
 
 
 def move_statement_up(file_content, loop_statement, loop_location, variable_name, functions):
+    global instance_counter
     loop_line = loop_location['start']['line'] - 1
     tabs_to_insert = ' ' * loop_location['start']['column']
 
     if not statement_contains_identifier(loop_statement, variable_name):
         pprint.pprint("############ found instance of rule #2 in assignment #############")
+        instance_counter += 1
 
         line_to_move = loop_statement.loc['start']['line'] - 1
         statement_start = loop_statement.loc['start']['column']
@@ -37,6 +52,7 @@ def move_statement_up(file_content, loop_statement, loop_location, variable_name
         file_content.insert(loop_line, statement_to_insert + "\n")
     elif statement_contains_pure_function_call(file_content, loop_location, loop_statement, variable_name, functions):
         pprint.pprint("############ found instance of rule #2 in function_call #############")
+        instance_counter += 1
 
 
 def statement_contains_pure_function_call(file_content, loop_location, loop_statement, variable_name, functions):
@@ -44,7 +60,10 @@ def statement_contains_pure_function_call(file_content, loop_location, loop_stat
         initial_value = loop_statement.expression
     else:
         return False
-    return check_for_pure_function_call(file_content, loop_location, initial_value.right, functions)
+    if initial_value.type == 'BinaryOperation':
+        return check_for_pure_function_call(file_content, loop_location, initial_value.right, functions)
+    else:
+        return False
 
 
 def check_for_pure_function_call(file_content, loop_location, statement, functions):
@@ -52,12 +71,11 @@ def check_for_pure_function_call(file_content, loop_location, statement, functio
         check_for_pure_function_call(file_content, loop_location, statement.left, functions)
         check_for_pure_function_call(file_content, loop_location, statement.right, functions)
     elif statement.type == 'FunctionCall':
-        function_name = statement.expression.name
         try:
+            function_name = statement.expression.name
             function = functions[function_name]
         except KeyError:
             return False
-            # TODO: functions defined in different contract
         if function.stateMutability == 'pure' and function.arguments == {}:
             global additional_lines
             loop_line = loop_location['start']['line'] - 1 + additional_lines
@@ -84,6 +102,8 @@ def statement_contains_identifier(loop_statement, variable_name):
     else:
         return True
     # as identifier
+    if initial_value is None:  # no value set; example: "uint256 a;"
+        return False
     if initial_value.type == 'Identifier':
         return identifier_is_loop_variable(initial_value, variable_name)
     # as part of an operation
@@ -107,3 +127,9 @@ def binary_operation_contains_identifier(initial_value, variable_name):
     elif right.type == 'Identifier':
         return identifier_is_loop_variable(right, variable_name)
     return False
+
+
+def get_instance_counter():
+    global instance_counter
+    return instance_counter
+
