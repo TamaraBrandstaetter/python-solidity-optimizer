@@ -3,12 +3,14 @@ import os
 import ntpath
 import csv
 import requests
+import json
 
 from solidity_parser import parser
 
-# from rules.logic_rule_1 import check_logic_rule_1
-from rules.loop_rule_1 import check_loop_rule_1, get_instance_counter
-from rules.loop_rule_2 import check_loop_rule_2
+from rules import loop_rule_1, logic_rule_1
+
+
+# from rules.loop_rule_2 import check_loop_rule_2
 # from rules.loop_rule_3 import check_loop_rule_3
 # from rules.loop_rule_4 import check_loop_rule_4
 # from rules.loop_rule_5 import check_loop_rule_5
@@ -19,6 +21,9 @@ from rules.loop_rule_2 import check_loop_rule_2
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == '-initialize':
         initialize()
+        return 0
+    elif len(sys.argv) > 1 and sys.argv[1] == '-preprocess':
+        preprocess()
         return 0
     else:
         files = []
@@ -68,19 +73,46 @@ def main():
                             if isinstance(statement, str):
                                 # would result in an AttributeError when there is no statement type. example: 'throw;'
                                 continue
-                            if statement and statement.type == 'ForStatement':
-                                for_count += 1
-                                check_loop_rule_1(content, statement, all_functions)
-                                # check_loop_rule_2(content, statement)
-                                # check_loop_rule_3(content, statement)
-                                # check_loop_rule_4(content, statement)
-                                # check_loop_rule_5(content, statement)
+                            if statement:
+                                if statement.type == 'ForStatement':
+                                    for_count += 1
+                                    loop_rule_1.check_rule(content, statement, all_functions)
+                                    # check_loop_rule_2(content, statement)
+                                    # check_loop_rule_3(content, statement)
+                                    # check_loop_rule_4(content, statement)
+                                    # check_loop_rule_5(content, statement)
+                                elif statement.type == 'IfStatement':
+                                    logic_rule_1.check_rule(content, statement)
             # write output
             output_file.writelines(content)
             output_file.close()
         # print summary of the findings
-        print('# of for statements found in all contracts: ' + str(for_count))
-        print('# of instances loop rule 2: ' + str(get_instance_counter()))
+        # print('# of for statements found in all contracts: ' + str(for_count))
+        print('# of instances loop rule 2: ' + str(loop_rule_1.get_instance_counter()))
+        print('# of instances logic rule 1: ' + str(logic_rule_1.get_instance_counter()))
+
+
+def preprocess():
+    files = []
+    for r, d, f in os.walk("evaluation_contracts"):
+        for file in f:
+            files.append(os.path.join(r, file))
+
+    for f in files:
+        file = open(f, "r", encoding='utf8')
+        text = file.read()
+        if text.startswith('{{'):
+            print("################ corrupt file: " + f)
+        elif text.startswith('{'):
+            data = json.loads(text)
+            print(f)
+            output_file = open(file.name.replace("evaluation_contracts", "input"), 'w', encoding='utf8')
+            files_appended = ''
+            for key, value in data.items():
+                files_appended = files_appended + value['content'] + "\n\n"
+            file_content = files_appended.replace("\r\n", "\n")
+            output_file.write(file_content)
+            output_file.close()
 
 
 def initialize():

@@ -12,7 +12,7 @@ additional_lines = 0
 instance_counter = 0
 
 
-def check_loop_rule_1(file_content, loop_statement, functions):
+def check_rule(file_content, loop_statement, functions):
     loop_expressions = loop_statement.initExpression
     loop_body = loop_statement.body
     loop_location = loop_statement.loc
@@ -89,9 +89,11 @@ def statement_contains_identifiers_modified_inside_loop(loop_statement, loop_bod
                     return True
                 elif body_statement.expression.left.type == 'TupleExpression':
                     for component in body_statement.expression.left.components:
-                        if component.type == 'Identifier' \
+                        if component and component.type == 'Identifier' \
                                 and statement_contains_identifier(loop_statement, component.name):
                             return True
+        if body_statement.type == 'IfStatement' or body_statement.type == 'ForStatement':
+            return True
     return False
 
 
@@ -152,8 +154,9 @@ def identifier_is_loop_variable(initial_value, variable_name):
 
 def tuple_expression_contains_identifier(tuple, variable_name):
     for component in tuple.components:
-        if binary_operation_contains_identifier(component, variable_name):
-            return True
+        if component.type == 'BinaryOperation':
+            if binary_operation_contains_identifier(component, variable_name):
+                return True
     return False
 
 
