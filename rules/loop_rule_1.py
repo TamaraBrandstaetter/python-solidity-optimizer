@@ -13,6 +13,8 @@ instance_counter = 0
 
 
 def check_rule(file_content, loop_statement, functions):
+    global additional_lines
+    additional_lines = 0
     loop_expressions = loop_statement.initExpression
     loop_body = loop_statement.body
     loop_location = loop_statement.loc

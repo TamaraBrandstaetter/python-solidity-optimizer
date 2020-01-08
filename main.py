@@ -7,7 +7,7 @@ import json
 
 from solidity_parser import parser
 
-from rules import loop_rule_1, logic_rule_1
+from rules import loop_rule_1, logic_rule_1, logic_rule_2
 
 
 # from rules.loop_rule_2 import check_loop_rule_2
@@ -27,7 +27,7 @@ def main():
         return 0
     else:
         files = []
-        for r, d, f in os.walk("contracts"):
+        for r, d, f in os.walk("evaluation_contracts"):
             for file in f:
                 files.append(os.path.join(r, file))
 
@@ -74,22 +74,40 @@ def main():
                                 # would result in an AttributeError when there is no statement type. example: 'throw;'
                                 continue
                             if statement:
-                                if statement.type == 'ForStatement':
-                                    for_count += 1
-                                    loop_rule_1.check_rule(content, statement, all_functions)
+                                # todo: wieder einkommentieren
+                                # if statement.type == 'ForStatement':
+                                #     for_count += 1
+                                    # loop_rule_1.check_rule(content, statement, all_functions)
+
                                     # check_loop_rule_2(content, statement)
                                     # check_loop_rule_3(content, statement)
                                     # check_loop_rule_4(content, statement)
                                     # check_loop_rule_5(content, statement)
-                                elif statement.type == 'IfStatement':
-                                    logic_rule_1.check_rule(content, statement)
+                                # todo: wieder einkommentieren:
+                                # elif statement.type == 'IfStatement':
+                                    # logic_rule_1.check_rule(content, statement)
+                                # todo: ändern auf elif
+                                if statement.type == 'VariableDeclarationStatement' \
+                                        and statement.variables and len(statement.variables) == 1:
+                                    for variable in statement.variables:
+                                        if variable.type == 'VariableDeclaration' \
+                                                and variable.typeName.type == 'ElementaryTypeName' \
+                                                and variable.typeName.name == 'bool':
+                                            print('boolean variable found')
+                                            content = logic_rule_2.check_rule(content, statements, statement)
+
             # write output
             output_file.writelines(content)
             output_file.close()
         # print summary of the findings
         # print('# of for statements found in all contracts: ' + str(for_count))
-        print('# of instances loop rule 2: ' + str(loop_rule_1.get_instance_counter()))
-        print('# of instances logic rule 1: ' + str(logic_rule_1.get_instance_counter()))
+        print('########################################################################')
+        print('#########                SUMMARY OF RESULTS                    #########')
+        print('########################################################################')
+        print('######### number of instances  loop rule 2: ' + str(loop_rule_1.get_instance_counter()))
+        print('######### number of instances logic rule 1: ' + str(logic_rule_1.get_instance_counter()))
+        print('######### number of instances logic rule 2: ' + str(logic_rule_2.get_instance_counter()))
+        print('########################################################################')
 
 
 def preprocess():
