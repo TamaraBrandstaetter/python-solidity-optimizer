@@ -8,7 +8,7 @@ from solidity_parser import parser
 
 # from rules.logic_rule_1 import check_logic_rule_1
 from rules.loop_rule_1 import check_loop_rule_1, get_instance_counter
-# from rules.loop_rule_2 import check_loop_rule_2
+from rules.loop_rule_2 import check_loop_rule_2
 # from rules.loop_rule_3 import check_loop_rule_3
 # from rules.loop_rule_4 import check_loop_rule_4
 # from rules.loop_rule_5 import check_loop_rule_5
