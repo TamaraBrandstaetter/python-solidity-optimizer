@@ -74,20 +74,17 @@ def main():
                                 # would result in an AttributeError when there is no statement type. example: 'throw;'
                                 continue
                             if statement:
-                                # todo: wieder einkommentieren
-                                # if statement.type == 'ForStatement':
-                                #     for_count += 1
-                                    # loop_rule_1.check_rule(content, statement, all_functions)
+                                if statement.type == 'ForStatement':
+                                    for_count += 1
+                                    loop_rule_1.check_rule(content, statement, all_functions)
 
                                     # check_loop_rule_2(content, statement)
                                     # check_loop_rule_3(content, statement)
                                     # check_loop_rule_4(content, statement)
                                     # check_loop_rule_5(content, statement)
-                                # todo: wieder einkommentieren:
-                                # elif statement.type == 'IfStatement':
-                                    # logic_rule_1.check_rule(content, statement)
-                                # todo: ändern auf elif
-                                if statement.type == 'VariableDeclarationStatement' \
+                                elif statement.type == 'IfStatement':
+                                    logic_rule_1.check_rule(content, statement)
+                                elif statement.type == 'VariableDeclarationStatement' \
                                         and statement.variables and len(statement.variables) == 1:
                                     for variable in statement.variables:
                                         if variable.type == 'VariableDeclaration' \
