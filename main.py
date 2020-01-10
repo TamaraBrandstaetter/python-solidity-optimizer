@@ -7,15 +7,7 @@ import json
 
 from solidity_parser import parser
 
-from rules import loop_rule_1, logic_rule_1, logic_rule_2
-
-
-# from rules.loop_rule_2 import check_loop_rule_2
-# from rules.loop_rule_3 import check_loop_rule_3
-# from rules.loop_rule_4 import check_loop_rule_4
-# from rules.loop_rule_5 import check_loop_rule_5
-# from rules.procedure_rule_1 import check_procedure_rule_1
-# from rules.time_for_space_rule_1 import check_time_for_space_rule_1
+from rules import loop_rule_1, logic_rule_1, logic_rule_2, procedure_rule_1
 
 
 def main():
@@ -62,13 +54,13 @@ def main():
                 # check_time_for_space_rule_1(content, contract)
                 functions = source_unit_object.contracts[contract].functions
                 function_keys = source_unit_object.contracts[contract].functions.keys()
-                for function in function_keys:
-                    function = functions[function]
-                    # check_logic_rule_1(content, function)
-                    # check_procedure_rule_1(content, function)
+                for function_key in function_keys:
+                    function = functions[function_key]
                     function_body = function._node.body
                     if function_body:
                         statements = function_body.statements
+                        procedure_rule_1.check_rule(content, statements, function_key,
+                                                    function.arguments, function._node.loc)
                         for statement in statements:
                             if isinstance(statement, str):
                                 # would result in an AttributeError when there is no statement type. example: 'throw;'
@@ -90,7 +82,6 @@ def main():
                                         if variable.type == 'VariableDeclaration' \
                                                 and variable.typeName.type == 'ElementaryTypeName' \
                                                 and variable.typeName.name == 'bool':
-                                            print('boolean variable found')
                                             content = logic_rule_2.check_rule(content, statements, statement)
 
             # write output
@@ -101,9 +92,10 @@ def main():
         print('########################################################################')
         print('#########                SUMMARY OF RESULTS                    #########')
         print('########################################################################')
-        print('######### number of instances  loop rule 2: ' + str(loop_rule_1.get_instance_counter()))
-        print('######### number of instances logic rule 1: ' + str(logic_rule_1.get_instance_counter()))
-        print('######### number of instances logic rule 2: ' + str(logic_rule_2.get_instance_counter()))
+        print('######### number of instances      loop rule 2:     ' + str(loop_rule_1.get_instance_counter()))
+        print('######### number of instances     logic rule 1:     ' + str(logic_rule_1.get_instance_counter()))
+        print('######### number of instances     logic rule 2:     ' + str(logic_rule_2.get_instance_counter()))
+        print('######### number of instances procedure rule 1:     ' + str(procedure_rule_1.get_instance_counter()))
         print('########################################################################')
 
 
