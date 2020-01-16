@@ -7,9 +7,12 @@
 import pprint
 
 instance_counter = 0
+additional_lines = 0
 
 
-def check_rule(file_content, statement):
+def check_rule(added_lines, file_content, statement):
+    global additional_lines
+    additional_lines = added_lines
     if statement.condition.type == 'BinaryOperation' \
             and statement.condition.left.type == 'UnaryOperation' and statement.condition.left.operator == '!' \
             and statement.condition.right.type == 'UnaryOperation' and statement.condition.right.operator == '!':
@@ -17,13 +20,13 @@ def check_rule(file_content, statement):
         if statement.condition.operator == '&&' or statement.condition.operator == '||':
             apply_law_of_de_morgan(statement, file_content)
             pprint.pprint('found instance of logic rule 1')
-    return True
+    return additional_lines
 
 
 def apply_law_of_de_morgan(statement, file_content):
-    global instance_counter
+    global instance_counter, additional_lines
     instance_counter += 1
-    statement_line = statement.loc['start']['line'] - 1
+    statement_line = statement.loc['start']['line'] - 1 + additional_lines
     pprint.pprint('statement line: ' + str(statement_line))
 
     new_operator = '&&'
@@ -56,8 +59,16 @@ def apply_law_of_de_morgan(statement, file_content):
     new_line = file_content[statement_line].replace(statement_to_move, replacement)
     file_content.remove(file_content[statement_line])
     file_content.insert(statement_line, new_line)
+    comment_line = '// ############ PY_SOLOPT: Found instance of the law of De Morgan. ############\n'
+    file_content.insert(statement_line, comment_line)
+    additional_lines += 1
 
 
 def get_instance_counter():
     global instance_counter
     return instance_counter
+
+
+def get_additional_lines():
+    global additional_lines
+    return additional_lines

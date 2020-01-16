@@ -12,21 +12,22 @@ additional_lines = 0
 instance_counter = 0
 
 
-def check_rule(file_content, function_statements, function_key, function_args, function_location):
+def check_rule(added_lines, file_content, function_statements, function_key, function_args, function_location):
     global additional_lines, instance_counter
-    additional_lines = 0
+    additional_lines = added_lines
 
     if function_key is None:
         # constructor
-        return False
+        return additional_lines
 
     for statement in function_statements:
         if statement_contains_function_call(statement, function_key, function_args):
             add_comment_above(file_content, function_location)
-            pprint.pprint('############# Found potential instance of procedure rule 1: Recursive Procedure')
+            pprint.pprint('############# Found instance of procedure rule 1')
             pprint.pprint('line: ' + str(function_location['start']['line']))
             instance_counter += 1
-            return True
+            return additional_lines
+    return additional_lines
 
 
 def statement_contains_function_call(statement, function_key, function_args):
@@ -84,8 +85,8 @@ def add_comment_above(file_content, function_location):
 
 
 def statement_contains_function_key(file_content, statement, function_key):
-    start_line = statement.loc['start']['line'] - 1
-    end_line = statement.loc['end']['line']
+    start_line = statement.loc['start']['line'] - 1 + additional_lines
+    end_line = statement.loc['end']['line'] + additional_lines
 
     for line in range(start_line, end_line):
         content_line = file_content[line]
@@ -96,3 +97,8 @@ def statement_contains_function_key(file_content, statement, function_key):
 def get_instance_counter():
     global instance_counter
     return instance_counter
+
+
+def get_additional_lines():
+    global additional_lines
+    return additional_lines

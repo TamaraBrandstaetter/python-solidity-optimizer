@@ -23,9 +23,8 @@ def main():
             for file in f:
                 files.append(os.path.join(r, file))
 
-        for_count = 1
-
         for f in files:
+            additional_lines = 0
             print(f)
             # read input
             file = open(f, "r", encoding='utf8')
@@ -59,36 +58,35 @@ def main():
                     function_body = function._node.body
                     if function_body:
                         statements = function_body.statements
-                        procedure_rule_1.check_rule(content, statements, function_key,
-                                                    function.arguments, function._node.loc)
+                        additional_lines = procedure_rule_1.check_rule(additional_lines, content,
+                                                                       statements, function_key,
+                                                                       function.arguments, function._node.loc)
                         for statement in statements:
                             if isinstance(statement, str):
                                 # would result in an AttributeError when there is no statement type. example: 'throw;'
                                 continue
                             if statement:
                                 if statement.type == 'ForStatement':
-                                    for_count += 1
-                                    loop_rule_1.check_rule(content, statement, all_functions)
-
+                                    additional_lines = loop_rule_1.check_rule(additional_lines, content,
+                                                                              statement, all_functions)
                                     # check_loop_rule_2(content, statement)
                                     # check_loop_rule_3(content, statement)
                                     # check_loop_rule_4(content, statement)
                                     # check_loop_rule_5(content, statement)
                                 elif statement.type == 'IfStatement':
-                                    logic_rule_1.check_rule(content, statement)
+                                    additional_lines = logic_rule_1.check_rule(additional_lines, content, statement)
                                 elif statement.type == 'VariableDeclarationStatement' \
                                         and statement.variables and len(statement.variables) == 1:
                                     for variable in statement.variables:
                                         if variable.type == 'VariableDeclaration' \
                                                 and variable.typeName.type == 'ElementaryTypeName' \
                                                 and variable.typeName.name == 'bool':
-                                            content = logic_rule_2.check_rule(content, statements, statement)
-
+                                            additional_lines = logic_rule_2.check_rule(additional_lines, content,
+                                                                                       statements, statement)
             # write output
             output_file.writelines(content)
             output_file.close()
-        # print summary of the findings
-        # print('# of for statements found in all contracts: ' + str(for_count))
+        # summary of the findings
         print('########################################################################')
         print('#########                SUMMARY OF RESULTS                    #########')
         print('########################################################################')
@@ -140,7 +138,7 @@ def initialize():
     api_key = "EMSUR6UBYCTVHFA787RJGBATX7HUHXARZI"
     index = 0
     for address in addresses:
-        print(str(index+1) + "/" + str(len(addresses)) + ": " + names[index] + "; address: " + address)
+        print(str(index + 1) + "/" + str(len(addresses)) + ": " + names[index] + "; address: " + address)
         params = {'module': 'contract', 'action': 'getsourcecode', 'address': address, 'apikey': api_key}
         request = requests.get(url=url, params=params)
         data = request.json()

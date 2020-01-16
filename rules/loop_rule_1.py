@@ -12,33 +12,34 @@ additional_lines = 0
 instance_counter = 0
 
 
-def check_rule(file_content, loop_statement, functions):
+def check_rule(added_lines, file_content, loop_statement, functions):
     global additional_lines
-    additional_lines = 0
+    additional_lines = added_lines
     loop_expressions = loop_statement.initExpression
     loop_body = loop_statement.body
     loop_location = loop_statement.loc
 
     if loop_expressions is None:
         # no loop expression. example: "for (; len >= 32; len -= 32)"
-        return False
+        return additional_lines
     try:
         loop_expressions.variables
     except KeyError:
         # loop variable is not defined inside the loop. example: "for (i = 0; i < length; i++)"
-        return False
+        return additional_lines
     for variable in loop_expressions.variables:
         if loop_body.type == 'Block':
             for loop_statement in loop_body.statements:
                 move_statement_up(file_content, loop_statement, loop_location, variable.name, functions, loop_body)
         elif loop_body.type == 'ExpressionStatement':
             # loop inline. example: "for (uint i = 0; i < _ba.length; i++) babc[k++] = _ba[i];"
-            return False
+            return additional_lines
+    return additional_lines
 
 
 def move_statement_up(file_content, loop_statement, loop_location, variable_name, functions, loop_body):
     global instance_counter
-    loop_line = loop_location['start']['line'] - 1
+    loop_line = loop_location['start']['line'] - 1 + additional_lines
     tabs_to_insert = ' ' * loop_location['start']['column']
 
     if not statement_contains_identifier(loop_statement, variable_name) \
@@ -52,7 +53,7 @@ def move_statement_up(file_content, loop_statement, loop_location, variable_name
         pprint.pprint("loop line: " + str(loop_line))
         instance_counter += 1
 
-        line_to_move = loop_statement.loc['start']['line'] - 1
+        line_to_move = loop_statement.loc['start']['line'] - 1 + additional_lines
         statement_start = loop_statement.loc['start']['column']
         statement_end = loop_statement.loc['end']['column'] + 1
 
@@ -95,6 +96,7 @@ def statement_contains_identifiers_modified_inside_loop(loop_statement, loop_bod
                                 and statement_contains_identifier(loop_statement, component.name):
                             return True
         if body_statement.type == 'IfStatement' or body_statement.type == 'ForStatement':
+            # TODO: improvement - also go through body of if and loop statements
             return True
     return False
 
@@ -124,7 +126,9 @@ def check_for_pure_function_call(file_content, loop_location, statement, functio
             file_content.remove(file_content[statement_line])
             file_content.insert(statement_line, new_line)
             file_content.insert(loop_line, tabs_to_insert + return_type + " " + variable_name + " = " + statement_to_move + ";\n")
-            additional_lines += 1
+            comment_line = '// ############ PY_SOLOPT: Found instance of the rule Code motion of loops. ############\n'
+            file_content.insert(loop_line, comment_line)
+            additional_lines += 2
             return True
     return False
 
@@ -193,3 +197,7 @@ def get_instance_counter():
     global instance_counter
     return instance_counter
 
+
+def get_additional_lines():
+    global additional_lines
+    return additional_lines

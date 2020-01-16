@@ -8,12 +8,12 @@
 import pprint
 
 instance_counter = 0
-missing_lines = 0
+additional_lines = 0
 
 
-def check_rule(file_content, function_statements, statement):
-    global missing_lines
-    missing_lines = 0
+def check_rule(added_lines, file_content, function_statements, statement):
+    global additional_lines
+    additional_lines = added_lines
     # Statement = bool variable declaration
     for function_statement in function_statements:
         if function_statement == statement:
@@ -25,7 +25,7 @@ def check_rule(file_content, function_statements, statement):
                     if not variable_is_modified_afterwards(function_statements, function_statement, statement, variable.name):
                         pprint.pprint("#### found instance of logic rule 2")
                         eliminate_bool_variable(file_content, statement, function_statement)
-    return file_content
+    return additional_lines
 
 
 def variable_is_modified_afterwards(function_statements, if_statement, variable_declaration, variable_name):
@@ -52,14 +52,16 @@ def statement_changes_variable(statement, variable_name):
 
 
 def eliminate_bool_variable(file_content, statement, if_statement):
-    global instance_counter, missing_lines
+    global instance_counter, additional_lines
     instance_counter += 1
 
-    statement_line = statement.loc['start']['line'] - 1 - missing_lines
+    statement_line = statement.loc['start']['line'] - 1 + additional_lines
     pprint.pprint('bool variable line: ' + str(statement_line))
 
-    if_statement_line = if_statement.loc['start']['line'] - 1 - missing_lines
+    if_statement_line = if_statement.loc['start']['line'] - 1 + additional_lines
     pprint.pprint('if statement line: ' + str(if_statement_line))
+
+    tabs_to_insert = ' ' * statement.loc['start']['column']
 
     condition_start = if_statement.condition.loc['start']['column']
     condition_end = if_statement.condition.loc['end']['column'] + len(if_statement.condition.name)
@@ -72,9 +74,10 @@ def eliminate_bool_variable(file_content, statement, if_statement):
 
     new_line = file_content[if_statement_line].replace(statement_to_move, replacement)
     file_content.remove(file_content[if_statement_line])
+    comment_line = '// ############ PY_SOLOPT: Found instance of an unnecessary boolean variable. ############\n'
     file_content.insert(if_statement_line, new_line)
+    file_content.insert(if_statement_line, tabs_to_insert + comment_line)
     file_content.remove(file_content[statement_line])
-    missing_lines += 1
 
 
 def get_instance_counter():
