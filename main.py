@@ -7,7 +7,7 @@ import json
 
 from solidity_parser import parser
 
-from rules import loop_rule_1, logic_rule_1, logic_rule_2, procedure_rule_1
+from rules import loop_rule_1, logic_rule_1, logic_rule_2, procedure_rule_1, time_for_space_rule_1, loop_rule_2
 
 
 def main():
@@ -19,7 +19,7 @@ def main():
         return 0
     else:
         files = []
-        for r, d, f in os.walk("evaluation_contracts"):
+        for r, d, f in os.walk("contracts"):
             for file in f:
                 files.append(os.path.join(r, file))
 
@@ -48,9 +48,10 @@ def main():
                 function_dictionary = source_unit_object.contracts[contract].functions
                 all_functions = {**all_functions, **function_dictionary}
 
+            loop_statements = ['ForStatement', 'WhileStatement', 'DoWhileStatement']
+
             # process rules
             for contract in contracts:
-                # check_time_for_space_rule_1(content, contract)
                 functions = source_unit_object.contracts[contract].functions
                 function_keys = source_unit_object.contracts[contract].functions.keys()
                 for function_key in function_keys:
@@ -61,15 +62,18 @@ def main():
                         additional_lines = procedure_rule_1.check_rule(additional_lines, content,
                                                                        statements, function_key,
                                                                        function.arguments, function._node.loc)
+                        # check space-for-time rule 1
+                        additional_lines = time_for_space_rule_1.check_rule(additional_lines, content, statements)
                         for statement in statements:
                             if isinstance(statement, str):
                                 # would result in an AttributeError when there is no statement type. example: 'throw;'
                                 continue
                             if statement:
+                                if statement.type in loop_statements:
+                                    additional_lines = loop_rule_2.check_rule(additional_lines, content, statement)
                                 if statement.type == 'ForStatement':
                                     additional_lines = loop_rule_1.check_rule(additional_lines, content,
                                                                               statement, all_functions)
-                                    # check_loop_rule_2(content, statement)
                                     # check_loop_rule_3(content, statement)
                                     # check_loop_rule_4(content, statement)
                                     # check_loop_rule_5(content, statement)
