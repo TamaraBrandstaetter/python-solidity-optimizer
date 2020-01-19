@@ -7,7 +7,8 @@ import json
 
 from solidity_parser import parser
 
-from rules import loop_rule_1, logic_rule_1, logic_rule_2, procedure_rule_1, time_for_space_rule_1, loop_rule_2
+from rules import loop_rule_1, logic_rule_1, logic_rule_2, procedure_rule_1, time_for_space_rule_1, loop_rule_2, \
+    loop_rule_3
 
 
 def main():
@@ -74,6 +75,7 @@ def main():
                                 if statement.type == 'ForStatement':
                                     additional_lines = loop_rule_1.check_rule(additional_lines, content,
                                                                               statement, all_functions)
+                                    additional_lines = loop_rule_3.check_rule(additional_lines, content, statement)
                                     # check_loop_rule_3(content, statement)
                                     # check_loop_rule_4(content, statement)
                                     # check_loop_rule_5(content, statement)
@@ -94,7 +96,9 @@ def main():
         print('########################################################################')
         print('#########                SUMMARY OF RESULTS                    #########')
         print('########################################################################')
-        print('######### number of instances      loop rule 2:     ' + str(loop_rule_1.get_instance_counter()))
+        print('######### number of instances      loop rule 1:     ' + str(loop_rule_1.get_instance_counter()))
+        print('######### number of instances      loop rule 2:     ' + str(loop_rule_2.get_instance_counter()))
+        print('######### number of instances      loop rule 3:     ' + str(loop_rule_3.get_instance_counter()))
         print('######### number of instances     logic rule 1:     ' + str(logic_rule_1.get_instance_counter()))
         print('######### number of instances     logic rule 2:     ' + str(logic_rule_2.get_instance_counter()))
         print('######### number of instances procedure rule 1:     ' + str(procedure_rule_1.get_instance_counter()))

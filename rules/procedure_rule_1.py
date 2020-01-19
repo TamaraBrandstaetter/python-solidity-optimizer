@@ -24,7 +24,7 @@ def check_rule(added_lines, file_content, function_statements, function_key, fun
         if statement_contains_function_call(statement, function_key, function_args):
             add_comment_above(file_content, function_location)
             pprint.pprint('############# Found instance of procedure rule 1')
-            pprint.pprint('line: ' + str(function_location['start']['line']))
+            pprint.pprint('line: ' + str(function_location['start']['line'] + additional_lines))
             instance_counter += 1
             return additional_lines
     return additional_lines
