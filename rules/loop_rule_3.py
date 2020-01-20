@@ -45,10 +45,10 @@ def check_rule(added_lines, file_content, loop_statement):
                         exit_value = int(loop_statement.conditionExpression.right.number)
                         lt = exit_value - initial_value
                         gt = initial_value - exit_value
-                        if (loop_statement.conditionExpression.operator == '<' and 0 < lt <= 10) \
-                                or (loop_statement.conditionExpression.operator == '<=' and 0 < lt < 10) \
-                                or (loop_statement.conditionExpression.operator == '>' and 0 < gt <= 10) \
-                                or (loop_statement.conditionExpression.operator == '>=' and 0 < gt < 10):
+                        if (loop_statement.conditionExpression.operator == '<' and 0 < lt <= 8) \
+                                or (loop_statement.conditionExpression.operator == '<=' and 0 < lt < 8) \
+                                or (loop_statement.conditionExpression.operator == '>' and 0 < gt <= 8) \
+                                or (loop_statement.conditionExpression.operator == '>=' and 0 < gt < 8):
                             unroll_loop(file_content, loop_statement, initial_value,
                                         loop_statement.conditionExpression.operator, exit_value, loop_var_name)
     return additional_lines
@@ -70,23 +70,23 @@ def unroll_loop(file_content, loop_statement, start_value, condition_operator, e
 
     range_value = []
     if condition_operator == '<':
-        range_value = range(start_value, exit_value)
+        range_value = range(exit_value - 1, start_value - 1, -1)
     elif condition_operator == '<=':
-        range_value = range(start_value, exit_value + 1)
+        range_value = range(exit_value, start_value - 1, -1)
     elif condition_operator == '>':
         range_value = range(exit_value, start_value)
     elif condition_operator == '>=':
         range_value = range(exit_value, start_value + 1)
 
-    file_changed = False
+    file_changed = 0
     for i in range_value:
-        file_changed = add_loop_content(file_content, loop_line, tabs_to_insert, loop_statements, var_name, i)
+        file_changed += add_loop_content(file_content, loop_line, tabs_to_insert, loop_statements, var_name, i)
 
     # remove whole loop from file content
-    if file_changed:
+    if file_changed > 0:
         remove_counter = 0
         for i in range(loop_line, loop_end):
-            file_content.remove(file_content[loop_line + additional_lines])
+            del file_content[loop_line + file_changed]
             remove_counter += 1
         additional_lines -= remove_counter
         comment_line = '// ### PY_SOLOPT ### Found a rule violation of Loop Rule 3. Loop was automatically unrolled.\n'
@@ -106,15 +106,17 @@ def unroll_loop(file_content, loop_statement, start_value, condition_operator, e
 
 def add_loop_content(file_content, loop_line, tabs, statements, variable_name, variable_value):
     global additional_lines
+    added_lines = 0
     for statement in statements:
         if statement.type != 'ExpressionStatement':
-            return False
+            return 0
     for statement in statements:
         statement_line = file_content[statement.loc['start']['line'] - 1 + additional_lines]
         new_line = check_statement(statement.expression, statement_line, variable_name, variable_value)
         file_content.insert(loop_line, tabs + new_line.lstrip(' '))
         additional_lines += 1
-    return True
+        added_lines += 1
+    return added_lines
 
 
 def check_statement(expression, line, var_name, var_value):
@@ -126,7 +128,19 @@ def check_statement(expression, line, var_name, var_value):
         return check_identifier(expression, line, var_name, var_value)
     elif expression.type == 'IndexAccess':
         return check_index_access(expression, line, var_name, var_value)
+    elif expression.type == 'TupleExpression':
+        return check_tuple_expression(expression, line, var_name, var_value)
+    elif expression.type == 'MemberAccess':
+        return check_statement(expression.expression, line, var_name, var_value)
     return line
+
+
+def check_tuple_expression(expression, line, var_name, var_value):
+    new_line = line
+    if expression.components:
+        for component in expression.components:
+            new_line = check_statement(component, new_line, var_name, var_value)
+    return new_line
 
 
 def check_function_call(expression, line, var_name, var_value):
@@ -151,7 +165,13 @@ def check_index_access(expression, line, var_name, var_value):
 
 def check_identifier(expression, line, var_name, var_value):
     if expression.name == var_name:
-        return line[:expression.loc['start']['column']] + str(var_value) + line[expression.loc['end']['column'] + 1:]
+        if len(var_name) == 1:
+            return line[:expression.loc['start']['column']] + str(var_value) + line[expression.loc['end']['column'] + 1:]
+        else:
+            if str(line[:expression.loc['start']['column'] + 1]).endswith(var_name):
+                return line[:expression.loc['start']['column'] + 1 - len(var_name)] + str(var_value) + line[expression.loc['end']['column'] + 1:]
+            elif str(line[expression.loc['end']['column']:]).startswith(var_name):
+                return line[:expression.loc['start']['column']] + str(var_value) + line[expression.loc['end']['column'] + len(var_name):]
     return line
 
 
