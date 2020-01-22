@@ -35,8 +35,7 @@ def replace_trivial_assignment(loop_statements, loop_var_name, file_content):
             if not var_is_reset(loop_statements, statement, var_name):
                 pprint.pprint("Found occurence of Loop Rule 4")
                 pprint.pprint("Line: " + str(statement.loc['start']['line']))
-                # todo: replace all occurrences of var_name with loop_var_name
-                # replace_alias(loop_statements, statement, var_name, loop_var_name, file_content)
+
                 tabs_to_insert = ' ' * statement.loc['start']['column']
                 comment_line = '// ### PY_SOLOPT ### Found a rule violation of Loop Rule 4:\n'
                 comment_line2 = '// TODO: Replace alias \'' + var_name + '\' by the variable \'' + loop_var_name + \
@@ -45,30 +44,6 @@ def replace_trivial_assignment(loop_statements, loop_var_name, file_content):
                                     tabs_to_insert + comment_line2)
                 file_content.insert(statement.loc['start']['line'] - 1 + additional_lines,
                                     tabs_to_insert + comment_line)
-
-
-# def replace_alias(loop_statements, var_statement, var_alias, var_name, file_content):
-#     global additional_lines
-#     hit = False
-#     for statement in loop_statements:
-#         if not hit:
-#             if statement == var_statement:
-#                 hit = True
-#             else:
-#                 continue
-#         else:
-#             remove var_alias from statements, remove var_statement line
-# statement_line = file_content[statement.loc['start']['line'] - 1 + additional_lines]
-# new_line = check_statement(statement, statement_line, var_alias, var_name)
-# if statement_line != new_line:
-#     file_content.insert(statement.loc['start']['line'], new_line)
-#     del file_content[statement.loc['start']['line']]
-# added_lines += 1
-# tabs_to_insert = ' ' * var_statement.loc['start']['column']
-# comment_line = '// ### PY_SOLOPT ### Found a rule violation of Loop Rule 4. Replace alias \'' \
-#                + var_alias + '\' by the variable \'' + var_name + '\' in order to save gas.\n'
-# file_content.insert(var_statement.loc['start']['line'] - 1 + additional_lines, tabs_to_insert + comment_line)
-# del file_content[var_statement.loc['start']['line'] + additional_lines]
 
 
 def var_is_reset(loop_statements, var_statement, var_name):
@@ -118,83 +93,6 @@ def expression_contains_var(expression, var_name):
     elif expression.type == 'Identifier' and expression.name == var_name:
         return True
     return False
-
-
-# def check_statement(statement, line, var_name, var_value):
-#     if statement.type == 'IfStatement':
-#         if statement.TrueBody:
-#             if statement.FalseBody is not None:
-#                 new_line = check_statement(statement.TrueBody, line, var_name, var_value)
-#                 return check_statement(statement.FalseBody, new_line, var_name, var_value)
-#             else:
-#                 return check_statement(statement.TrueBody, line, var_name, var_value)
-#     elif statement.type == 'Block':
-#         new_line = ''
-#         for block_statement in statement.statements:
-#             new_line += check_statement(block_statement, line, var_name, var_value)
-#         return new_line
-#     elif statement.type == 'ForStatement':
-#         if statement.body is not None:
-#             return check_statement(statement.body, line, var_name, var_value)
-#     elif statement.type == 'ExpressionStatement':
-#         return check_expression(statement.expression, line, var_name, var_value)
-#     return False
-#
-#
-# def check_expression(expression, line, var_name, var_value):
-#     if expression.type == 'BinaryOperation':
-#         return check_binary_operation(expression, line, var_name, var_value)
-#     elif expression.type == 'FunctionCall':
-#         return check_function_call(expression, line, var_name, var_value)
-#     elif expression.type == 'Identifier':
-#         return check_identifier(expression, line, var_name, var_value)
-#     elif expression.type == 'IndexAccess':
-#         return check_index_access(expression, line, var_name, var_value)
-#     elif expression.type == 'TupleExpression':
-#         return check_tuple_expression(expression, line, var_name, var_value)
-#     elif expression.type == 'MemberAccess':
-#         return check_expression(expression.expression, line, var_name, var_value)
-#     return line
-#
-#
-# def check_tuple_expression(expression, line, var_name, var_value):
-#     new_line = line
-#     if expression.components:
-#         for component in expression.components:
-#             new_line = check_expression(component, new_line, var_name, var_value)
-#     return new_line
-#
-#
-# def check_function_call(expression, line, var_name, var_value):
-#     new_line = line
-#     if expression.arguments:
-#         for argument in expression.arguments:
-#             new_line = check_expression(argument, new_line, var_name, var_value)
-#     return new_line
-#
-#
-# def check_binary_operation(expression, line, var_name, var_value):
-#     left_expr = expression.left
-#     right_expr = expression.right
-#     new_line = check_expression(left_expr, line, var_name, var_value)
-#     new_line = check_expression(right_expr, new_line, var_name, var_value)
-#     return new_line
-#
-#
-# def check_index_access(expression, line, var_name, var_value):
-#     return check_expression(expression.index, line, var_name, var_value)
-#
-#
-# def check_identifier(expression, line, var_name, var_value):
-#     if expression.name == var_name:
-#         if len(var_name) == 1:
-#             return line[:expression.loc['start']['column']] + str(var_value) + line[expression.loc['end']['column'] + 1:]
-#         else:
-#             if str(line[:expression.loc['start']['column'] + 1]).endswith(var_name):
-#                 return line[:expression.loc['start']['column'] + 1 - len(var_name)] + str(var_value) + line[expression.loc['end']['column'] + 1:]
-#             elif str(line[expression.loc['end']['column']:]).startswith(var_name):
-#                 return line[:expression.loc['start']['column']] + str(var_value) + line[expression.loc['end']['column'] + len(var_name):]
-#     return line
 
 
 def get_instance_counter():

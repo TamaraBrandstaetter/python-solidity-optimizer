@@ -8,7 +8,7 @@ import json
 from solidity_parser import parser
 
 from rules import loop_rule_1, logic_rule_1, logic_rule_2, procedure_rule_1, time_for_space_rule_1, loop_rule_2, \
-    loop_rule_3
+    loop_rule_3, loop_rule_4
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
         return 0
     else:
         files = []
-        for r, d, f in os.walk("contracts"):
+        for r, d, f in os.walk("input"):
             for file in f:
                 files.append(os.path.join(r, file))
 
@@ -76,6 +76,7 @@ def main():
                                     additional_lines = loop_rule_1.check_rule(additional_lines, content,
                                                                               statement, all_functions)
                                     additional_lines = loop_rule_3.check_rule(additional_lines, content, statement)
+                                    additional_lines = loop_rule_4.check_rule(additional_lines, content, statement)
                                     # check_loop_rule_3(content, statement)
                                     # check_loop_rule_4(content, statement)
                                     # check_loop_rule_5(content, statement)
@@ -99,6 +100,7 @@ def main():
         print('######### number of instances      loop rule 1:     ' + str(loop_rule_1.get_instance_counter()))
         print('######### number of instances      loop rule 2:     ' + str(loop_rule_2.get_instance_counter()))
         print('######### number of instances      loop rule 3:     ' + str(loop_rule_3.get_instance_counter()))
+        print('######### number of instances      loop rule 4:     ' + str(loop_rule_4.get_instance_counter()))
         print('######### number of instances     logic rule 1:     ' + str(logic_rule_1.get_instance_counter()))
         print('######### number of instances     logic rule 2:     ' + str(logic_rule_2.get_instance_counter()))
         print('######### number of instances procedure rule 1:     ' + str(procedure_rule_1.get_instance_counter()))
