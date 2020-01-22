@@ -8,7 +8,7 @@ import json
 from solidity_parser import parser
 
 from rules import loop_rule_1, logic_rule_1, logic_rule_2, procedure_rule_1, time_for_space_rule_1, loop_rule_2, \
-    loop_rule_3, loop_rule_4
+    loop_rule_3, loop_rule_4, loop_rule_5
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
         return 0
     else:
         files = []
-        for r, d, f in os.walk("input"):
+        for r, d, f in os.walk("contracts"):
             for file in f:
                 files.append(os.path.join(r, file))
 
@@ -60,36 +60,33 @@ def main():
                     function_body = function._node.body
                     if function_body:
                         statements = function_body.statements
-                        additional_lines = procedure_rule_1.check_rule(additional_lines, content,
-                                                                       statements, function_key,
-                                                                       function.arguments, function._node.loc)
-                        # check space-for-time rule 1
-                        additional_lines = time_for_space_rule_1.check_rule(additional_lines, content, statements)
+                        # additional_lines = procedure_rule_1.check_rule(additional_lines, content,
+                        #                                                statements, function_key,
+                        #                                                function.arguments, function._node.loc)
+                        # additional_lines = time_for_space_rule_1.check_rule(additional_lines, content, statements)
                         for statement in statements:
                             if isinstance(statement, str):
                                 # would result in an AttributeError when there is no statement type. example: 'throw;'
                                 continue
                             if statement:
                                 if statement.type in loop_statements:
-                                    additional_lines = loop_rule_2.check_rule(additional_lines, content, statement)
-                                if statement.type == 'ForStatement':
-                                    additional_lines = loop_rule_1.check_rule(additional_lines, content,
-                                                                              statement, all_functions)
-                                    additional_lines = loop_rule_3.check_rule(additional_lines, content, statement)
-                                    additional_lines = loop_rule_4.check_rule(additional_lines, content, statement)
-                                    # check_loop_rule_3(content, statement)
-                                    # check_loop_rule_4(content, statement)
-                                    # check_loop_rule_5(content, statement)
-                                elif statement.type == 'IfStatement':
-                                    additional_lines = logic_rule_1.check_rule(additional_lines, content, statement)
-                                elif statement.type == 'VariableDeclarationStatement' \
-                                        and statement.variables and len(statement.variables) == 1:
-                                    for variable in statement.variables:
-                                        if variable.type == 'VariableDeclaration' \
-                                                and variable.typeName.type == 'ElementaryTypeName' \
-                                                and variable.typeName.name == 'bool':
-                                            additional_lines = logic_rule_2.check_rule(additional_lines, content,
-                                                                                       statements, statement)
+                                    # additional_lines = loop_rule_2.check_rule(additional_lines, content, statement)
+                                    if statement.type == 'ForStatement':
+                                    #     additional_lines = loop_rule_1.check_rule(additional_lines, content,
+                                    #                                               statement, all_functions)
+                                    #     additional_lines = loop_rule_3.check_rule(additional_lines, content, statement)
+                                    #     additional_lines = loop_rule_4.check_rule(additional_lines, content, statement)
+                                        additional_lines = loop_rule_5.check_rule(additional_lines, content, statement)
+                                # elif statement.type == 'IfStatement':
+                                #     additional_lines = logic_rule_1.check_rule(additional_lines, content, statement)
+                                # elif statement.type == 'VariableDeclarationStatement' \
+                                #         and statement.variables and len(statement.variables) == 1:
+                                #     for variable in statement.variables:
+                                #         if variable.type == 'VariableDeclaration' \
+                                #                 and variable.typeName.type == 'ElementaryTypeName' \
+                                #                 and variable.typeName.name == 'bool':
+                                #             additional_lines = logic_rule_2.check_rule(additional_lines, content,
+                                #                                                        statements, statement)
             # write output
             output_file.writelines(content)
             output_file.close()
