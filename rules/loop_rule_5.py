@@ -12,7 +12,7 @@ instance_counter = 0
 
 
 def check_rule(added_lines, file_content, loop_statement):
-    global additional_lines
+    global additional_lines, instance_counter
     additional_lines = added_lines
 
     if (loop_statement.conditionExpression and loop_statement.conditionExpression.type == 'BinaryOperation'
@@ -51,6 +51,7 @@ def check_rule(added_lines, file_content, loop_statement):
                             pprint.pprint("########## found replacement candidate -> make dowhile loop out of for loop")
                             pprint.pprint("line: " + str(loop_statement.loc['start']['line']))
                             replace_loop(loop_statement, file_content)
+                            instance_counter += 1
     return additional_lines
 
 
@@ -68,7 +69,7 @@ def replace_loop(loop_statement, file_content):
 
     loop_content = file_content[loop_line]
     init_expression = loop_content[loop_init.loc['start']['column']:loop_init.loc['end']['column']]
-    condition_expression = loop_content[loop_condition.loc['start']['column']:loop_condition.loc['end']['column'] + 1]
+    condition_expression = loop_content[loop_condition.loc['start']['column']:loop_condition.loc['end']['column']] + loop_condition.right.number
     loop_expression = loop_content[loop_expr.expression.loc['start']['column']:loop_expr.expression.loc['end']['column'] + 2]
 
     # replace for (....) with: do {
