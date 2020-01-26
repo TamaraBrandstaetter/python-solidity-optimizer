@@ -1,9 +1,9 @@
 #################################################
-#   Loop rule 4: Unconditional Branch Removing  #
+#   Loop rule 4: Transfer-Driven Loop Unrolling #
 #   ------------------------------------------  #
-#   Using a do-while loop instead of a while-   #
-#   or for-loop removes a conditional jump      #
-#   operation at the beginning of the loop.     #
+#   Removing trivial assignments (aliases)      #
+#   within a loop and replacing them with the   #
+#  values themselves reduces the required space.#
 #################################################
 
 import pprint

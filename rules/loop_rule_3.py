@@ -1,5 +1,5 @@
 ###################################################
-#   Loop rule 3: Transfer-Driven Loop Unrolling   #
+#   Loop rule 3: Loop Unrolling                   #
 #   -------------------------------------------   #
 #   Removing trivial assignments (aliases)        #
 #   within a loop and replacing them with the     #

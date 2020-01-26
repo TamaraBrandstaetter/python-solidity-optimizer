@@ -1,8 +1,9 @@
 #################################################
-#   Loop rule 6: Loop Fusion                    #
+#   Loop rule 5: Unconditional Branch Removing  #
 #   ------------------------------------------  #
-#   Combining loops across the same collections #
-#   to one can save computation and space.      #
+#   Using a do-while loop instead of a while-   #
+#   or for-loop removes a conditional jump      #
+#   operation at the beginning of the loop.     #
 #################################################
 
 import pprint
