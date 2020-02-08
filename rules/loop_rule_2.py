@@ -5,8 +5,6 @@
 #   within a loop.                              #
 #################################################
 
-import pprint
-
 additional_lines = 0
 instance_counter = 0
 
@@ -18,16 +16,16 @@ def check_rule(added_lines, file_content, loop_statement):
         if (loop_statement.condition and loop_statement.condition.type == 'BinaryOperation'
                 and (loop_statement.condition.operator == '&&' or loop_statement.condition.operator == '||')):
             add_comment_above(file_content, loop_statement.loc)
-            pprint.pprint('### Found instance of loop rule 2')
-            pprint.pprint('line: ' + str(loop_statement.loc['start']['line'] + additional_lines))
+            print('### found instance of loop rule 2; line: '
+                  + str(loop_statement.loc['start']['line'] + additional_lines))
             instance_counter += 1
     elif loop_statement.type == 'ForStatement':
         if (loop_statement.conditionExpression and loop_statement.conditionExpression.type == 'BinaryOperation'
                 and (loop_statement.conditionExpression.operator == '&&'
                      or loop_statement.conditionExpression.operator == '||')):
             add_comment_above(file_content, loop_statement.loc)
-            pprint.pprint('### Found instance of loop rule 2')
-            pprint.pprint('line: ' + str(loop_statement.loc['start']['line'] + additional_lines))
+            print('### found instance of loop rule 2; line: '
+                  + str(loop_statement.loc['start']['line'] + additional_lines))
             instance_counter += 1
     return additional_lines
 

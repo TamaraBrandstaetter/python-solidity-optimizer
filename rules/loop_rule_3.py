@@ -6,8 +6,6 @@
 #   values themselves reduces the required space. #
 ###################################################
 
-import pprint
-
 additional_lines = 0
 instance_counter = 0
 
@@ -99,8 +97,7 @@ def unroll_loop(file_content, loop_statement, start_value, condition_operator, e
         file_content.insert(loop_line, tabs_to_insert + comment_line1)
         additional_lines += 2
 
-    pprint.pprint('### Found instance of loop rule 3')
-    pprint.pprint('line: ' + str(loop_statement.loc['start']['line']))
+    print('### found instance of loop rule 3; line: ' + str(loop_statement.loc['start']['line']))
     instance_counter += 1
 
 

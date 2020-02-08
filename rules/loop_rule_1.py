@@ -5,7 +5,6 @@
 #   loop and therefore only calculated once.    #
 #################################################
 
-import pprint
 import uuid
 
 additional_lines = 0
@@ -49,8 +48,7 @@ def move_statement_up(file_content, loop_statement, loop_location, variable_name
         #             uint256 previousResult = result; # can't move this line up
         #             result = previousResult.mul(a);
         #         }
-        pprint.pprint("############ found instance of rule #2 in assignment #############")
-        pprint.pprint("loop line: " + str(loop_line))
+        print('### found instance of loop rule 1; line: ' + str(loop_line))
         instance_counter += 1
 
         line_to_move = loop_statement.loc['start']['line'] - 1 + additional_lines
@@ -61,7 +59,7 @@ def move_statement_up(file_content, loop_statement, loop_location, variable_name
         file_content.remove(file_content[line_to_move])
         file_content.insert(loop_line, statement_to_insert + "\n")
     elif statement_contains_pure_function_call(file_content, loop_location, loop_statement, variable_name, functions):
-        pprint.pprint("############ found instance of rule #2 in function_call #############")
+        print('### found instance of loop rule 1 in function call')
         instance_counter += 1
 
 
@@ -115,7 +113,6 @@ def check_for_pure_function_call(file_content, loop_location, statement, functio
             global additional_lines
             loop_line = loop_location['start']['line'] - 1 + additional_lines
             tabs_to_insert = ' ' * loop_location['start']['column']
-            pprint.pprint("Found pure function call")
             statement_line = statement.loc['start']['line'] - 1 + additional_lines
             statement_start = statement.loc['start']['column']
             statement_end = statement.loc['end']['column'] + 1

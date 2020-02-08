@@ -6,8 +6,6 @@
 #  values themselves reduces the required space.#
 #################################################
 
-import pprint
-
 additional_lines = 0
 instance_counter = 0
 
@@ -33,8 +31,7 @@ def replace_trivial_assignment(loop_statements, loop_var_name, file_content):
                 and statement.initialValue.name == loop_var_name:
             var_name = statement.variables[0].name
             if not var_is_reset(loop_statements, statement, var_name):
-                pprint.pprint("Found occurence of Loop Rule 4")
-                pprint.pprint("Line: " + str(statement.loc['start']['line']))
+                print('### found instance of loop rule 4; line: ' + str(statement.loc['start']['line']))
 
                 tabs_to_insert = ' ' * statement.loc['start']['column']
                 comment_line = '// ### PY_SOLOPT ### Found a rule violation of Loop Rule 4:\n'

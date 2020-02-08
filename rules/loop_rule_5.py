@@ -6,8 +6,6 @@
 #   operation at the beginning of the loop.     #
 #################################################
 
-import pprint
-
 additional_lines = 0
 instance_counter = 0
 
@@ -49,8 +47,8 @@ def check_rule(added_lines, file_content, loop_statement):
                                 or (loop_statement.conditionExpression.operator == '<=' and lt_loop_runs >= 0) \
                                 or (loop_statement.conditionExpression.operator == '>' and gt_loop_runs > 0) \
                                 or (loop_statement.conditionExpression.operator == '>=' and gt_loop_runs >= 0):
-                            pprint.pprint("########## found replacement candidate -> make dowhile loop out of for loop")
-                            pprint.pprint("line: " + str(loop_statement.loc['start']['line']))
+                            print('### found instance of loop rule 5; line: '
+                                  + str(loop_statement.loc['start']['line']))
                             replace_loop(loop_statement, file_content)
                             instance_counter += 1
     return additional_lines

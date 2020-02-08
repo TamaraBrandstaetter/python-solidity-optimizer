@@ -33,8 +33,7 @@ def check_rule(added_lines, file_content, first_loop, second_loop):
                 additional_lines -= 1
             comment_line = '// ### PY_SOLOPT ### Found a rule violation of Loop Rule 6 - Loop fusion.\n'
             tabs_to_insert = ' ' * first_loop.loc['start']['column']
-            print('####### found instance of loop rule 6')
-            print('####### Line:' + str(first_loop_location))
+            print('### found instance of loop rule 6; line: ' + str(first_loop_location))
             file_content.insert(first_loop_location, tabs_to_insert + comment_line)
             instance_counter += 1
     return additional_lines

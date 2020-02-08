@@ -4,8 +4,6 @@
 #   Application of the law of De Morgan          #
 ##################################################
 
-import pprint
-
 instance_counter = 0
 additional_lines = 0
 
@@ -19,7 +17,6 @@ def check_rule(added_lines, file_content, statement):
         # found instance of deMorgan
         if statement.condition.operator == '&&' or statement.condition.operator == '||':
             apply_law_of_de_morgan(statement, file_content)
-            pprint.pprint('found instance of logic rule 1')
     return additional_lines
 
 
@@ -27,7 +24,7 @@ def apply_law_of_de_morgan(statement, file_content):
     global instance_counter, additional_lines
     instance_counter += 1
     statement_line = statement.loc['start']['line'] - 1 + additional_lines
-    pprint.pprint('statement line: ' + str(statement_line))
+    print('### found instance of logic rule 1; line: ' + str(statement_line))
 
     new_operator = '&&'
     if statement.condition.operator == '&&':

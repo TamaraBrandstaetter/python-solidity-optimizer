@@ -23,7 +23,6 @@ def check_rule(added_lines, file_content, function_statements, statement):
                 if function_statement.condition.name == variable.name and statement.initialValue:
                     # if the value is not modified afterwards
                     if not variable_is_modified_afterwards(function_statements, function_statement, statement, variable.name):
-                        pprint.pprint("#### found instance of logic rule 2")
                         eliminate_bool_variable(file_content, statement, function_statement)
     return additional_lines
 
@@ -56,10 +55,8 @@ def eliminate_bool_variable(file_content, statement, if_statement):
     instance_counter += 1
 
     statement_line = statement.loc['start']['line'] - 1 + additional_lines
-    pprint.pprint('bool variable line: ' + str(statement_line))
-
     if_statement_line = if_statement.loc['start']['line'] - 1 + additional_lines
-    pprint.pprint('if statement line: ' + str(if_statement_line))
+    print('### found instance of logic rule 2; lines: ' + str(statement_line) + ' and ' + str(if_statement_line))
 
     tabs_to_insert = ' ' * statement.loc['start']['column']
 
