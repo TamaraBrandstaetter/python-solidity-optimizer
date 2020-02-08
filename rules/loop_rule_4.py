@@ -24,6 +24,9 @@ def check_rule(added_lines, file_content, loop_statement):
 
 def replace_trivial_assignment(loop_statements, loop_var_name, file_content):
     for statement in loop_statements:
+        if isinstance(statement, str):
+            # would result in an AttributeError when there is no statement type. example: 'throw;' or 'break;'
+            continue
         if statement.type == 'VariableDeclarationStatement' \
                 and statement.variables \
                 and statement.initialValue is not None \

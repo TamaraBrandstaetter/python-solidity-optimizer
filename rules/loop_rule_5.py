@@ -25,8 +25,10 @@ def check_rule(added_lines, file_content, loop_statement):
             loop_var_name = loop_statement.initExpression.variables[0].name
             if loop_statement.initExpression.initialValue is not None \
                     and loop_statement.initExpression.initialValue.type == 'NumberLiteral':
-                initial_value = int(loop_statement.initExpression.initialValue.number)
-
+                try:
+                    initial_value = int(loop_statement.initExpression.initialValue.number)
+                except ValueError:
+                    return additional_lines
                 # check loopExpression
                 if loop_statement.loopExpression \
                         and loop_statement.loopExpression.type == 'ExpressionStatement' \

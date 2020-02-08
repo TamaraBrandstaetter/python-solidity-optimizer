@@ -64,6 +64,9 @@ def move_statement_up(file_content, loop_statement, loop_location, variable_name
 
 
 def statement_contains_pure_function_call(file_content, loop_location, loop_statement, variable_name, functions):
+    if isinstance(loop_statement, str):
+        # would result in an AttributeError when there is no statement type. example: 'throw;' or 'break;'
+        return False
     if loop_statement.type == 'ExpressionStatement':
         initial_value = loop_statement.expression
     else:
@@ -131,6 +134,9 @@ def check_for_pure_function_call(file_content, loop_location, statement, functio
 
 
 def statement_contains_identifier(loop_statement, variable_name):
+    if isinstance(loop_statement, str):
+        # would result in an AttributeError when there is no statement type. example: 'throw;' or 'break;'
+        return False
     if loop_statement.type == 'VariableDeclarationStatement':
         initial_value = loop_statement.initialValue
     else:
