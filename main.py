@@ -7,20 +7,34 @@ import json
 
 from solidity_parser import parser
 
+import evaluation
 from rules import loop_rule_1, logic_rule_1, logic_rule_2, procedure_rule_1, loop_rule_2, \
     loop_rule_3, loop_rule_4, loop_rule_5, loop_rule_6
 
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == '-initialize':
-        initialize()
-        return 0
-    elif len(sys.argv) > 1 and sys.argv[1] == '-preprocess':
-        preprocess()
-        return 0
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '-initialize':
+            initialize()
+            return 0
+        elif sys.argv[1] == '-preprocess':
+            preprocess()
+            return 0
+        elif sys.argv[1] == '-demorgan':
+            evaluation.count_de_morgan()
+            return 0
+        elif sys.argv[1] == '-boolean':
+            evaluation.count_bool_variables()
+            return 0
+        elif sys.argv[1] == '-loops':
+            evaluation.count_loops()
+            return 0
+        elif sys.argv[1] == '-loopstatements':
+            evaluation.count_loop_conditions()
+            return 0
     else:
         files = []
-        for r, d, f in os.walk("contracts"):
+        for r, d, f in os.walk("found_violations\\total"):
             for file in f:
                 files.append(os.path.join(r, file))
 
@@ -60,7 +74,7 @@ def main():
                     function_body = function._node.body
                     if function_body:
                         statements = function_body.statements
-                        ###### PROCEDURE RULE 1 ######
+                        ##### PROCEDURE RULE 1 ######
                         additional_lines = procedure_rule_1.check_rule(additional_lines, content,
                                                                        statements, function_key,
                                                                        function.arguments, function._node.loc)
@@ -68,6 +82,7 @@ def main():
                         for statement in statements:
                             if isinstance(statement, str):
                                 # would result in an AttributeError when there is no statement type. example: 'throw;'
+                                first_for_statement = None
                                 continue
                             if statement:
                                 ###### LOGIC RULE 1 ######
@@ -110,9 +125,9 @@ def main():
                                     if first_for_statement is not None:
                                         additional_lines = loop_rule_6.check_rule(additional_lines, content,
                                                                                   first_for_statement, statement)
-                                        first_for_statement = None
-                                    else:
-                                        first_for_statement = statement
+                                    first_for_statement = statement
+                                else:
+                                    first_for_statement = None
             # write output
             output_file.writelines(content)
             output_file.close()

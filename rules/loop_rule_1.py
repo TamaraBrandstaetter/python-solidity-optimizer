@@ -112,7 +112,7 @@ def check_for_pure_function_call(file_content, loop_location, statement, functio
             function = functions[function_name]
         except KeyError:
             return False
-        if function.stateMutability == 'pure' and function.arguments == {}:
+        if function.stateMutability in ['pure', 'view', 'constant'] and function.arguments == {}:
             global additional_lines
             loop_line = loop_location['start']['line'] - 1 + additional_lines
             tabs_to_insert = ' ' * loop_location['start']['column']

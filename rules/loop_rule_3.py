@@ -11,7 +11,7 @@ instance_counter = 0
 
 
 def check_rule(added_lines, file_content, loop_statement):
-    global additional_lines
+    global additional_lines, instance_counter
     additional_lines = added_lines
 
     if (loop_statement.conditionExpression and loop_statement.conditionExpression.type == 'BinaryOperation'
@@ -46,12 +46,28 @@ def check_rule(added_lines, file_content, loop_statement):
                         exit_value = int(loop_statement.conditionExpression.right.number)
                         lt = exit_value - initial_value
                         gt = initial_value - exit_value
-                        if (loop_statement.conditionExpression.operator == '<' and 0 < lt <= 8) \
-                                or (loop_statement.conditionExpression.operator == '<=' and 0 < lt < 8) \
-                                or (loop_statement.conditionExpression.operator == '>' and 0 < gt <= 8) \
-                                or (loop_statement.conditionExpression.operator == '>=' and 0 < gt < 8):
-                            unroll_loop(file_content, loop_statement, initial_value,
-                                        loop_statement.conditionExpression.operator, exit_value, loop_var_name)
+                        if loop_statement.conditionExpression.operator in ['<', '<=', '>', '>=']:
+                            if (loop_statement.conditionExpression.operator == '<' and 0 < lt <= 8) \
+                                    or (loop_statement.conditionExpression.operator == '<=' and 0 < lt < 8) \
+                                    or (loop_statement.conditionExpression.operator == '>' and 0 < gt <= 8) \
+                                    or (loop_statement.conditionExpression.operator == '>=' and 0 < gt < 8):
+                                unroll_loop(file_content, loop_statement, initial_value,
+                                            loop_statement.conditionExpression.operator, exit_value, loop_var_name)
+                            else:
+                                print('### found instance of loop rule 3; line: ' + str(
+                                    loop_statement.loc['start']['line']))
+                                instance_counter += 1
+                                # add comment
+                                loop_location = loop_statement.loc
+                                loop_line = loop_location['start']['line'] - 1 + additional_lines
+                                tabs_to_insert = ' ' * loop_location['start']['column']
+                                comment_line1 = '// ### PY_SOLOPT ### Found a POSSIBLE rule violation of Loop Rule 3' \
+                                                ' Unrolling loop.\n'
+                                comment_line2 = '// ### PY_SOLOPT ### Try to unroll the loop to improve the gas' \
+                                                ' consumption.\n'
+                                file_content.insert(loop_line, tabs_to_insert + comment_line2)
+                                file_content.insert(loop_line, tabs_to_insert + comment_line1)
+                                additional_lines += 2
     return additional_lines
 
 

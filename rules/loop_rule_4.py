@@ -23,6 +23,7 @@ def check_rule(added_lines, file_content, loop_statement):
 
 
 def replace_trivial_assignment(loop_statements, loop_var_name, file_content):
+    global instance_counter
     for statement in loop_statements:
         if isinstance(statement, str):
             # would result in an AttributeError when there is no statement type. example: 'throw;' or 'break;'
@@ -35,6 +36,7 @@ def replace_trivial_assignment(loop_statements, loop_var_name, file_content):
             var_name = statement.variables[0].name
             if not var_is_reset(loop_statements, statement, var_name):
                 print('### found instance of loop rule 4; line: ' + str(statement.loc['start']['line']))
+                instance_counter += 1
 
                 tabs_to_insert = ' ' * statement.loc['start']['column']
                 comment_line = '// ### PY_SOLOPT ### Found a rule violation of Loop Rule 4:\n'

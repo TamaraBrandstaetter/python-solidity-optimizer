@@ -22,15 +22,15 @@ def check_rule(added_lines, file_content, first_loop, second_loop):
 
         if file_content[first_loop_location] == file_content[second_loop_location]:
             # todo: check whether loop var is reset
-            first_loop_end_location = first_loop.loc['end']['line'] - 1 + additional_lines
-            first_loop_end = file_content[first_loop_end_location]
-            del file_content[second_loop_location]
-            if bool(re.match('^[\t\n {]+$', file_content[second_loop_location])):
-                del file_content[second_loop_location]
-                additional_lines -= 1
-            if bool(re.match('^[\t\n }]+$', first_loop_end)):
-                del file_content[first_loop_end_location]
-                additional_lines -= 1
+            # first_loop_end_location = first_loop.loc['end']['line'] - 1 + additional_lines
+            # first_loop_end = file_content[first_loop_end_location]
+            # del file_content[second_loop_location]
+            # if bool(re.match('^[\t\n {]+$', file_content[second_loop_location])):
+            #     del file_content[second_loop_location]
+            #     additional_lines -= 1
+            # if bool(re.match('^[\t\n }]+$', first_loop_end)):
+            #     del file_content[first_loop_end_location]
+            #     additional_lines -= 1
             comment_line = '// ### PY_SOLOPT ### Found a rule violation of Loop Rule 6 - Loop fusion.\n'
             tabs_to_insert = ' ' * first_loop.loc['start']['column']
             print('### found instance of loop rule 6; line: ' + str(first_loop_location))
