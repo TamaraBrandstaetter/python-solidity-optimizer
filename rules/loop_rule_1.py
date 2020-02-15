@@ -29,7 +29,8 @@ def check_rule(added_lines, file_content, loop_statement, functions):
     for variable in loop_expressions.variables:
         if loop_body.type == 'Block':
             for loop_statement in loop_body.statements:
-                move_statement_up(file_content, loop_statement, loop_location, variable.name, functions, loop_body)
+                if not isinstance(loop_statement, str) and loop_statement.type == 'VariableDeclarationStatement':
+                    move_statement_up(file_content, loop_statement, loop_location, variable.name, functions, loop_body)
         elif loop_body.type == 'ExpressionStatement':
             # loop inline. example: "for (uint i = 0; i < _ba.length; i++) babc[k++] = _ba[i];"
             return additional_lines
@@ -54,9 +55,8 @@ def move_statement_up(file_content, loop_statement, loop_location, variable_name
         line_to_move = loop_statement.loc['start']['line'] - 1 + additional_lines
         statement_start = loop_statement.loc['start']['column']
         statement_end = loop_statement.loc['end']['column'] + 1
-
         statement_to_insert = tabs_to_insert + file_content[line_to_move][statement_start:statement_end]
-        file_content.remove(file_content[line_to_move])
+        del file_content[line_to_move]
         file_content.insert(loop_line, statement_to_insert + "\n")
     elif statement_contains_pure_function_call(file_content, loop_location, loop_statement, variable_name, functions):
         print('### found instance of loop rule 1 in function call')
@@ -80,27 +80,61 @@ def statement_contains_pure_function_call(file_content, loop_location, loop_stat
 # loop statement = the statement we want to move up
 def statement_contains_identifiers_modified_inside_loop(loop_statement, loop_body):
     # for all variables inside the loop check:
+    temp = True
     for body_statement in loop_body.statements:
         if loop_statement == body_statement:
             continue
-        if body_statement.type == 'VariableDeclarationStatement':
+        if isinstance(body_statement, str):
+            # would result in an AttributeError when there is no statement type. example: 'throw;' or 'break;'
+            continue
+        if body_statement.type == 'VariableDeclarationStatement' and body_statement.variables is not None:
             for variable in body_statement.variables:
-                if statement_contains_identifier(loop_statement, variable.name):
+                if not statement_contains_identifier(loop_statement, variable.name):
+                    continue
+                else:
                     return True
-        if body_statement.type == 'ExpressionStatement':
+        elif body_statement.type == 'ExpressionStatement':
             if body_statement.expression.type == 'BinaryOperation':
                 if body_statement.expression.left.type == 'Identifier' \
-                        and body_statement.expression.left.name == loop_statement.variables[0].name:
-                    return True
+                        and body_statement.expression.left.name != loop_statement.variables[0].name \
+                        and not statement_contains_identifier(loop_statement, body_statement.expression.left.name):
+                    continue
                 elif body_statement.expression.left.type == 'TupleExpression':
                     for component in body_statement.expression.left.components:
                         if component and component.type == 'Identifier' \
-                                and statement_contains_identifier(loop_statement, component.name):
+                                and component.name != loop_statement.variables[0].name \
+                                and not statement_contains_identifier(loop_statement, component.name):
+                            continue
+                        elif component and component.name == loop_statement.variables[0].name:
                             return True
-        if body_statement.type == 'IfStatement':
-            return statement_contains_identifiers_modified_inside_loop(loop_statement, body_statement.TrueBody)
-        if body_statement.type == 'ForStatement':
-            return statement_contains_identifiers_modified_inside_loop(loop_statement, body_statement.body)
+                elif body_statement.expression.left.type == 'IndexAccess':
+                    if body_statement.expression.left.base.type == 'Identifier' \
+                            and body_statement.expression.left.base.name != loop_statement.variables[0].name:
+                        continue
+                else:
+                    temp = False
+        elif body_statement.type == 'IfStatement':
+            if body_statement.TrueBody is not None \
+                    and not isinstance(body_statement.TrueBody, str) \
+                    and body_statement.TrueBody.type == 'Block':
+                if statement_contains_identifiers_modified_inside_loop(loop_statement, body_statement.TrueBody):
+                    return True
+                else:
+                    continue
+            else:
+                return True
+        elif body_statement.type == 'ForStatement':
+            if body_statement.body is not None and body_statement.body.type == 'Block':
+                if statement_contains_identifiers_modified_inside_loop(loop_statement, body_statement.body):
+                    return True
+                else:
+                    continue
+            else:
+                return True
+        else:
+            temp = False
+    if not temp:
+        return True
     return False
 
 
@@ -125,7 +159,7 @@ def check_for_pure_function_call(file_content, loop_location, statement, functio
             variable_name = "var_" + str(uuid.uuid4()).replace("-", "")
             return_type = function._node.returnParameters.parameters[0].typeName.name
             new_line = file_content[statement_line].replace(statement_to_move, variable_name)
-            file_content.remove(file_content[statement_line])
+            del file_content[statement_line]
             file_content.insert(statement_line, new_line)
             file_content.insert(loop_line,
                                 tabs_to_insert + return_type + " " + variable_name + " = " + statement_to_move + ";\n")
@@ -148,17 +182,19 @@ def statement_contains_identifier(loop_statement, variable_name):
         return True
     # as identifier
     if initial_value is None:  # no value set; example: "uint256 a;"
-        return True
-    if initial_value.type == 'Identifier':
+        return False
+    elif initial_value.type == 'Identifier':
         return identifier_is_loop_variable(initial_value, variable_name)
     # as part of an operation
-    if initial_value.type == 'BinaryOperation':
+    elif initial_value.type == 'BinaryOperation':
         return binary_operation_contains_identifier(initial_value, variable_name)
-    if initial_value.type == 'NumberLiteral' \
+    elif initial_value.type == 'NumberLiteral' \
             or initial_value.type == 'StringLiteral' \
             or initial_value.type == 'HexLiteral' \
             or initial_value.type == 'BooleanLiteral':
         return False
+    else:
+        pass
     return True
 
 
@@ -168,9 +204,7 @@ def identifier_is_loop_variable(initial_value, variable_name):
 
 def tuple_expression_contains_identifier(tuple, variable_name):
     for component in tuple.components:
-        if component.type == 'BinaryOperation':
-            if binary_operation_contains_identifier(component, variable_name):
-                return True
+        return check_side_of_binary_operation(component, variable_name)
     return False
 
 
@@ -178,7 +212,7 @@ def index_accesses_loop_variable(index_access, variable_name):
     if index_access.type == 'IndexAccess':
         if index_access.base.type == 'Identifier' and index_access.base.name == variable_name:
             return True
-        return index_accesses_loop_variable(index_access.index, variable_name)
+        return statement_contains_identifier(index_access.index, variable_name)
     elif index_access.type == 'Identifier' and index_access.name == variable_name:
         return True
     return False
