@@ -77,6 +77,7 @@ def statement_contains_pure_function_call(file_content, loop_location, loop_stat
         return False
 
 
+# loop statement = the statement we want to move up
 def statement_contains_identifiers_modified_inside_loop(loop_statement, loop_body):
     # for all variables inside the loop check:
     for body_statement in loop_body.statements:
@@ -89,16 +90,17 @@ def statement_contains_identifiers_modified_inside_loop(loop_statement, loop_bod
         if body_statement.type == 'ExpressionStatement':
             if body_statement.expression.type == 'BinaryOperation':
                 if body_statement.expression.left.type == 'Identifier' \
-                        and statement_contains_identifier(loop_statement, body_statement.expression.left.name):
+                        and body_statement.expression.left.name == loop_statement.variables[0].name:
                     return True
                 elif body_statement.expression.left.type == 'TupleExpression':
                     for component in body_statement.expression.left.components:
                         if component and component.type == 'Identifier' \
                                 and statement_contains_identifier(loop_statement, component.name):
                             return True
-        if body_statement.type == 'IfStatement' or body_statement.type == 'ForStatement':
-            # TODO: improvement - also go through body of if and loop statements
-            return True
+        if body_statement.type == 'IfStatement':
+            return statement_contains_identifiers_modified_inside_loop(loop_statement, body_statement.TrueBody)
+        if body_statement.type == 'ForStatement':
+            return statement_contains_identifiers_modified_inside_loop(loop_statement, body_statement.body)
     return False
 
 
@@ -125,7 +127,8 @@ def check_for_pure_function_call(file_content, loop_location, statement, functio
             new_line = file_content[statement_line].replace(statement_to_move, variable_name)
             file_content.remove(file_content[statement_line])
             file_content.insert(statement_line, new_line)
-            file_content.insert(loop_line, tabs_to_insert + return_type + " " + variable_name + " = " + statement_to_move + ";\n")
+            file_content.insert(loop_line,
+                                tabs_to_insert + return_type + " " + variable_name + " = " + statement_to_move + ";\n")
             comment_line = '// ############ PY_SOLOPT: Found instance of the rule Code motion of loops. ############\n'
             file_content.insert(loop_line, comment_line)
             additional_lines += 2
@@ -139,6 +142,8 @@ def statement_contains_identifier(loop_statement, variable_name):
         return False
     if loop_statement.type == 'VariableDeclarationStatement':
         initial_value = loop_statement.initialValue
+    elif loop_statement.type == 'ExpressionStatement':
+        initial_value = loop_statement.expression
     else:
         return True
     # as identifier
@@ -193,6 +198,11 @@ def check_side_of_binary_operation(side, variable_name):
         return tuple_expression_contains_identifier(side, variable_name)
     elif side.type == 'IndexAccess':
         return index_accesses_loop_variable(side, variable_name)
+    elif side.type == 'NumberLiteral' \
+            or side.type == 'StringLiteral' \
+            or side.type == 'HexLiteral' \
+            or side.type == 'BooleanLiteral':
+        return False
     return True
 
 
