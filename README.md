@@ -1,4 +1,4 @@
-# py_solopt
+# python-solidity-optimizer
 
 An automated Solidity-code optimizer based on the diploma thesis "Optimizing Solidity Smart Contracts".
 
